@@ -168,11 +168,11 @@ end
 
 
 function nql:preprocess(rawstate)
+    -- preproc = "net_downsample_2x_full_y"
     if self.preproc then
         return self.preproc:forward(rawstate:float())
                     :clone():reshape(self.state_dim)
     end
-
     return rawstate
 end
 

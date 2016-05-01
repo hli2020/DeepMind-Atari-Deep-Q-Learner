@@ -10,10 +10,11 @@ require 'nn'
 require 'nngraph'
 require 'nnutils'
 require 'image'
-require 'Scale'
 require 'NeuralQLearner'
-require 'TransitionTable'
 require 'Rectifier'
+require 'Scale'
+require 'TransitionTable'
+
 
 
 function torchSetup(_opt)
@@ -57,18 +58,20 @@ function torchSetup(_opt)
     if opt.gpu and opt.gpu >= 0 then
         require 'cutorch'
         require 'cunn'
-        if opt.gpu == 0 then
-            local gpu_id = tonumber(os.getenv('GPU_ID'))
-            if gpu_id then opt.gpu = gpu_id+1 end
-        end
-        if opt.gpu > 0 then cutorch.setDevice(opt.gpu) end
-        opt.gpu = cutorch.getDevice()
-        print('Using GPU device id:', opt.gpu-1)
-    else
-        opt.gpu = -1
-        if opt.verbose >= 1 then
-            print('Using CPU code only. GPU device id:', opt.gpu)
-        end
+
+        cutorch.setDevice(opt.gpu)
+    --     if opt.gpu == 0 then
+    --         local gpu_id = tonumber(os.getenv('GPU_ID'))
+    --         if gpu_id then opt.gpu = gpu_id+1 end
+    --     end
+    --     if opt.gpu > 0 then cutorch.setDevice(opt.gpu) end
+    --     opt.gpu = cutorch.getDevice()
+    --     print('Using GPU device id:', opt.gpu-1)
+    -- else
+    --     opt.gpu = -1
+    --     if opt.verbose >= 1 then
+    --         print('Using CPU code only. GPU device id:', opt.gpu)
+    --     end
     end
 
     --- set up random number generators
@@ -112,8 +115,8 @@ function setup(_opt)
     local opt = torchSetup(_opt)
 
     -- load training framework and environment
-    local framework = require(opt.framework)
-    assert(framework)
+    -- alewrap
+    local framework = require(opt.framework)    
 
     local gameEnv = framework.GameEnvironment(opt)
     local gameActions = gameEnv:getActions()
@@ -129,11 +132,28 @@ function setup(_opt)
     if not _opt.agent_params.state_dim then
         _opt.agent_params.state_dim = gameEnv:nObsFeature()
     end
-
-    local agent = dqn[_opt.agent](_opt.agent_params)
-
+    --print('')
+    -- print(dqn[_opt.agent]) -- this is a table
+    -- print(type(dqn[_opt.agent]))
+    -- print(#dqn[_opt.agent])      -- size 0!
+    -- will print out the network structure
+    -- print(dqn)          -- table
+    -- assert(opt.agent == _opt.agent)
+    -- print(opt.agent)
+    local agent = dqn[_opt.agent](_opt.agent_params)        
+    -- print(type(agent)) -- table
+    -- print(dqn[_opt.agent]) -- table
+    -- print('\nfront variables in agent')
+    -- local i = 0
+    -- for k, v in pairs(agent) do
+    --     i = i + 1
+    --     if i > 8 then break end
+    --     print(k, v)
+    -- end
+    -- print('')
+    -- stop()
     if opt.verbose >= 1 then
-        print('Set up Torch using these options:')
+        print('\nSet up Torch using these options:')
         for k, v in pairs(opt) do
             print(k, v)
         end
@@ -145,7 +165,6 @@ end
 
 
 --- other functions
-
 function str_to_table(str)
     if type(str) == 'table' then
         return str
